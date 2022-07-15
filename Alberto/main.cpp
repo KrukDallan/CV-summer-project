@@ -6,15 +6,22 @@ using namespace cv;
 
 int main(int argc, char** argv) {
 
+
 	instance inst;
 
 	read_input(&inst, argc, argv);
 
 	upload_img(&inst);
 
-	imshow("Edge Map", inst.grey_image[1]);
+	img_canny(&inst);
+
+	first_BoF_step(&inst);
+	second_BoF_step(&inst);
+	//imshow("Edge Map", inst.output_SIFT[2]);
+
+	//waitKey(0);
 	
-	waitKey(0);
+	
 
 
 	return 0;

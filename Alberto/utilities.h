@@ -5,7 +5,6 @@
 #include <opencv2/core.hpp>
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
-#include <opencv2/gapi/core.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/xfeatures2d.hpp>
 #include <vector>
@@ -33,5 +32,6 @@ void upload_img(instance* inst);
 void img_canny(instance* inst);
 void first_BoF_step(instance* inst);
 void second_BoF_step(instance* inst);
+void free_instance(instance* inst);
 
 #endif

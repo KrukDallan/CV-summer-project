@@ -15,8 +15,9 @@ int main(int argc, char** argv) {
 
 	img_canny(&inst);
 
-	first_BoF_step(&inst);
+	//first_BoF_step(&inst);
 	second_BoF_step(&inst);
+	free_instance(&inst);
 	//imshow("Edge Map", inst.output_SIFT[2]);
 
 	//waitKey(0);

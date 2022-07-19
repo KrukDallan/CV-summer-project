@@ -98,7 +98,7 @@ void first_BoF_step(instance* inst)
 
 	int dictionarySize = 200;
 
-	TermCriteria tc(TermCriteria::MAX_ITER, 100, 0.001);
+	TermCriteria tc(TermCriteria::MAX_ITER, 10, 0.001);
 
 	int retries = 1;
 
@@ -119,6 +119,7 @@ void first_BoF_step(instance* inst)
 
 void second_BoF_step(instance* inst) {
 	Mat dictionary;
+	Mat bowDescriptor;
 	
 	FileStorage fs("dictionary.yml", FileStorage::READ);
 	fs["vocabulary"] >> dictionary;
@@ -140,15 +141,13 @@ void second_BoF_step(instance* inst) {
 
 	FileStorage fs1("descriptor.yml", FileStorage::WRITE);
 
-	sprintf(filename, "data/0/03.jpg");
+	sprintf(filename, "data/0/02.jpg");
 
 	Mat img = imread(filename, IMREAD_GRAYSCALE);
 
 	vector<KeyPoint> keypoints;
 
 	detector->detect(img, keypoints);
-
-	Mat bowDescriptor;
 
 	bowDE.compute(img, keypoints, bowDescriptor);
 
@@ -157,6 +156,11 @@ void second_BoF_step(instance* inst) {
 	fs1 << imageTag << bowDescriptor;
 
 	fs1.release();
+}
+
+void free_instance(instance* inst) {
+	free(inst->image_path);
+	free(inst->set);
 }
 
 /*

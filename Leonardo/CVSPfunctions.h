@@ -12,3 +12,4 @@
 #include <string>
 
 void bowLastStep();
+void computeHistogram();

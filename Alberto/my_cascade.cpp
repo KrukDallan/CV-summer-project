@@ -34,7 +34,7 @@ void cascade_algo(Mat input_test, Mat output) {
 
 	vector<Rect> hands;
 
-	my_cascade.detectMultiScale(img, hands, 1.1, 2, 0, Size(120,120), Size(180,180));
+	my_cascade.detectMultiScale(img, hands, 1.1, 2, 0, Size(120,120), Size(160,160));
 
 	for (int i=0; i<hands.size();i++)
 	{

@@ -10,13 +10,14 @@ void read_input(instance* inst, int argc, char** argv) {
 		exit(1);
 	}
 
-
+	inst->image_path = NULL;
 	inst->set = 0;
 	int help = 0;
 
 	for (int i = 0; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
 			const char* path = argv[++i];
+			cout << path << '\n';
 			inst->image_path = (char*)calloc(strlen(path), sizeof(char));
 			strncpy(inst->image_path, path, strlen(path));
 			continue;
@@ -44,6 +45,7 @@ void read_input(instance* inst, int argc, char** argv) {
 
 void upload_img(instance* inst) {
 	string path = inst->image_path;
+	cout << inst->image_path;
 	//path += "/";
 	//path += inst->set;
 	path += "/*.jpg";
@@ -157,6 +159,27 @@ void second_BoF_step(instance* inst) {
 
 	fs1.release();
 }
+
+void preprocessing(instance* inst) {
+	vector<Mat> img = inst->image;
+	Mat tmp;
+	for (int i = 0; i < img.size(); i++) {
+		
+		blur(img[i], tmp, Size(5, 5));
+		
+		cvtColor(tmp, tmp, COLOR_BGR2HSV);
+
+		inRange(tmp, Scalar(0, 30, 60), Scalar(20, 150, 255), tmp);
+
+		erode(tmp, tmp, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
+
+		dilate(tmp, tmp, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
+
+		inst->filtered.push_back(tmp);
+	}
+	
+}
+
 
 void free_instance(instance* inst) {
 	free(inst->image_path);

@@ -19,6 +19,7 @@ typedef struct
 	std::vector<cv::Mat> grey_image;
 	std::vector<cv::Mat> img_edges;
 	std::vector<cv::Mat> output_SIFT;
+	std::vector<cv::Mat> filtered;
 	cv::Mat dictionary;
 
 	int verbose;
@@ -26,6 +27,8 @@ typedef struct
 }
 instance;
 
+
+void preprocessing(instance* inst);
 void read_input(instance* inst, int argc, char** argv);
 void upload_img(instance* inst);
 //void binarization(instance* inst);

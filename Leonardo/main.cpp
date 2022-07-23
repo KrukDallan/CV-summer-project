@@ -2,236 +2,248 @@
 
 #include "CVSPfunctions.h"
 
-
-//PROBLEMS:
-//1) Sift is NOT rotation invariant --> should we add vocabularies of rotated images
-//2) 
-
-
-//Things to add?:
-
-
-//Notes: histograms are used to train a classifier, like kNearestNeighbour
-// After creating the codebook with k centroids, iterate through every image used and
-// search for words present both in he dictionary and in the image, then increase the count of that particular word <-- this is how histograms are created
 int main(int argc, char** argv)
 {
 	std::string path = argv[1];
-	//kNearest(path);
-	//bow(path);
-	//blobDetector(path);
+	
+	// Image of the hand to be used for Template Matching
 	cv::Mat hand_img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\Hands\\Hand_0006335.jpg");
-	resize(hand_img, hand_img, cv::Size(), 1, 1, cv::INTER_LINEAR);
-	//cv::rotate(hand_img, hand_img, cv::ROTATE_90_CLOCKWISE);
-	cv::Mat test_img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\_LABELLED_SAMPLES\\CARDS_COURTYARD_B_T\\frame_0316.jpg");
-	/*int result_cols = test_img.cols - hand_img.cols + 1;
-	int result_rows = test_img.rows - hand_img.rows + 1;
+	//resize(hand_img, hand_img, cv::Size(), 0.5, 0.5, cv::INTER_LINEAR);
+	std::vector<cv::Mat> handVector;
+	handVector.push_back(hand_img);
+	//Obtain rotated versions of the hand
+	for (int i = 0; i < 3; i++)
+	{
+		cv::rotate(hand_img, hand_img, cv::ROTATE_90_CLOCKWISE);
+		handVector.push_back(hand_img);
+	}
+	
+	// Image to be tested
+	cv::Mat img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\02.jpg");
+
+	// Vector to store every rect (bb) found by the cascade of classifiers
+	// Note: intersecting rects will be dealt with in the following lines
+	std::vector<cv::Rect> temp_hands = cascade(img);
+
+	// Vector to store only the correct rects, which will be applied to the test image
+	std::vector<cv::Rect> rectVector;
+	 
+	// Vector that will contain no intersecting rectangles
+	std::vector<cv::Rect> hands;
+
+	bool no_intersection = true;
+	// +++++ WORK IN PROGRESS +++++
+	for (int i = 0; i < temp_hands.size()-1; i++)
+	{
+		for (int j = i + 1; j < temp_hands.size(); j++)
+		{
+			cv::Rect intersection = temp_hands[i] & temp_hands[j];
+			double area = intersection.width * intersection.height;
+			double areaRecti = temp_hands[i].width * temp_hands[i].height;
+			double areaRectj = temp_hands[j].width * temp_hands[j].height;
+			double minAreaBetween = cv::min(areaRecti, areaRectj);
+			/*if (area > 40*minAreaBetween/100)
+			{
+				cv::Rect tmp = temp_hands[i] | temp_hands[j];
+				hands.push_back(tmp);
+				no_intersection = false;
+				break;
+			}*/
+			if (area > 0)
+			{
+				if (areaRecti > areaRectj)
+				{
+					temp_hands[j] = temp_hands[i];
+					hands.push_back(temp_hands[i]);
+				}
+				else
+				{
+					hands.push_back(temp_hands[j]);
+					break;
+				}
+			}
+			else if (area < 10 * minAreaBetween / 100)
+			{
+				/*cv::Point2f p1((temp_hands[i].x + temp_hands[j].x) * 0.5, (temp_hands[i].y + temp_hands[j].y) * 0.5);
+				cv::Point2f p2((std::max(temp_hands[i].x , temp_hands[j].x)-std::min(temp_hands[i].x, temp_hands[j].x)) * 0.25, (std::max(temp_hands[i].y ,temp_hands[j].y) - std::min(temp_hands[i].y, temp_hands[j].y)) * 0.5);
+				cv::Rect newRect(p1, p2);
+				hands.push_back(newRect);
+				temp_hands[j] = newRect;
+				break;*/
+			}
+		} 
+		if (no_intersection == true)
+		{
+			hands.push_back(temp_hands[i]);
+		}
+		no_intersection = true;
+	}
+
+	// If you want to check how good the remaining bb are
+	/*for (int i = 0; i < hands.size(); i++)
+	{
+		cv::rectangle(img, hands[i], cv::Scalar(0, 255, 0));
+	}
+	cv::imshow("Union bb", img);
+	cv::waitKey(0);
+	return 0;*/
+
+	// Vector that will contain the values returned by the "correctBB" method
+	std::vector<float> outputVector;
+	// Index of the best bb
+	int bbIndex = 0;
+	// "Accuracy" of the best bounding box
+	double maxvalue = 0.0;
+	for (int i = 0; i < handVector.size(); i++)
+	{
+		outputVector = correctBB(img, hands, handVector[i]);
+		if (outputVector[1] > maxvalue)
+		{
+			bbIndex = (int)outputVector[0];
+			maxvalue = outputVector[1];
+		}
+	}
+	std::cout << "\n" << "Maxval = " << maxvalue << "\n";
+	// Check if the accuracy is too low
+	if (maxvalue < 0.1)
+	{
+		return 0;
+	}
+	maxvalue = 0.0;
+	// Image that will be modified in order to hide the part of the image where the best bb is
+	//This is done because in this way the cascade will not find the same bb again
+	cv::Mat modimg = img.clone();
+
+	rectVector.push_back(hands[bbIndex]);
+	
+	cv::rectangle(modimg, hands[bbIndex], cv::Scalar(0, 0, 0), -1);
+
+	std::vector<cv::Rect>hand2 = cascade(modimg);
+
+	// Used for imshow
+	int index = 2;
+
+	//Number of hands
+	int counter = 1;
+	
+	while(hand2.size() > 0 || counter != 4)
+	{
+		// Used for imshow
+		std::string nhands = "mani:";
+		maxvalue = 0.0;
+		for (int i = 0; i < handVector.size(); i++)
+		{
+			outputVector = correctBB(img, hand2, handVector[i]);
+			if (outputVector[1] > maxvalue)
+			{
+				bbIndex = (int)outputVector[0];
+				maxvalue = outputVector[1];
+			}
+		}
+		std::cout << "\n" << "Maxval = " << maxvalue << ", index = "<< bbIndex <<  "\n";
+		
+		if (maxvalue<0.1)
+		{
+			break;
+		}
+		else
+		{
+			/*for (int i = 0; i < rectVector.size(); i++)
+			{
+				cv::Rect intersection = rectVector[i] & hand2[bbIndex];
+				double area = intersection.width * intersection.height;
+				if (area > 0)
+				{
+					hand2[bbIndex] = rectVector[i] | hand2[bbIndex];
+					rectVector.push_back(hand2[bbIndex]);
+					break;
+				}
+			}*/
+			//cv::rectangle(img, hand2[bbIndex], cv::Scalar(0, 255, 0));
+			cv::rectangle(modimg, hand2[bbIndex], cv::Scalar(255, 255, 255), -1);
+			rectVector.push_back(hand2[bbIndex]);
+			nhands += std::to_string(index);
+			index++;
+			/*cv::imshow(nhands, img);
+			cv::waitKey(0);*/
+		}
+		hand2 = cascade(modimg);
+		counter++;
+		if (counter == 4)
+		{
+			break;
+		}
+	}
+	for (int i = 0; i < rectVector.size(); i++)
+	{
+		cv::rectangle(img, rectVector[i], cv::Scalar(0, 255, 0));
+	}
+	cv::imshow("Final result", img);
+	cv::waitKey(0);
+}
+
+std::vector<float> correctBB(cv::Mat img, std::vector<cv::Rect> hands, cv::Mat hand_img)
+{
+	if (hands.size() == 0)
+	{
+		std::vector<float> output;
+		output.push_back(0.0);
+		output.push_back(0.0);
+		return output;
+	}
+	std::cout << "\n" << hands.size() << "\n"; 
 	cv::Mat result;
-	result.create(result_rows, result_cols, CV_32FC1);*/
-	float rslt = bowTest(test_img);
-	std::cout <<"\n" << "result: " << rslt << "\n";
-	return 0;
-	//cv::Mat tmp, res;
+	std::vector<float> output;
+	double maxMaxVal = 0.0;
+	int bbIndex = 0;
+	for (int i = 0; i < hands.size(); i++)
+	{
+		//cv::rectangle(img, hands[i], cv::Scalar(0, 255, 0));
+		cv::Mat subimg = img(hands[i]);
+		cv::matchTemplate(subimg, hand_img, result, cv::TemplateMatchModes::TM_CCOEFF_NORMED); //
+		double minVal; double maxVal; cv::Point minLoc; cv::Point maxLoc;
+		cv::Point matchLoc;
+		cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
+		if (maxVal > maxMaxVal)
+		{
+			maxMaxVal = maxVal;
+			bbIndex = i +0.0;
+		}
+	}
+	std::cout << "\n" << "Maxval = " << maxMaxVal << "\n";
+	if (maxMaxVal < 0.38)
+	{
+		std::vector<float> output;
+		output.push_back(0.0);
+		output.push_back(0.0);
+		return output;
+	}
+	output.push_back(bbIndex);
+	output.push_back(maxMaxVal);
+	return output;
+}
 
-	//cv::blur(test_img, tmp, cv::Size(5, 5));
-
-	//cv::cvtColor(tmp, tmp, cv::COLOR_BGR2HSV);
-
-	//cv::inRange(tmp, cv::Scalar(0, 110, 0), cv::Scalar(55, 255, 169),  tmp);
-
-	////cv::erode(tmp, tmp, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)));
-
-	////cv::dilate(tmp, tmp, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5)));	
-
-	//
-	//cv::bitwise_and(test_img, test_img,res, tmp);
-	//
-	///*cv::imshow("original", test_img);
-	//cv::waitKey(0); 
-	//cv::imshow("prepro", tmp);
-	//cv::waitKey(0);
-	//cv::imshow("res", res);
-	//cv::waitKey(0);*/
-	///*cv::cvtColor(hand_img, hand_img, cv::COLOR_BGR2GRAY);
-	//std::vector<std::vector<cv::Point>> contours;
-	//cv::findContours(hand_img, contours, cv::RetrievalModes::RETR_LIST, cv::ContourApproximationModes::CHAIN_APPROX_TC89_KCOS);
-	//cv::drawContours(hand_img, contours, -1, (0, 255, 0), 3);
-	//cv::imshow("contours", hand_img);
-	//cv::waitKey(0);*/
-	//
-	//cv::matchTemplate(test_img, hand_img, result, cv::TemplateMatchModes::TM_CCORR_NORMED); //
-	//double minVal; double maxVal; cv::Point minLoc; cv::Point maxLoc;
-	//cv::Point matchLoc;
-	//cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
-	//matchLoc = maxLoc;
-	//cv::rectangle(test_img, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), -1, 8, 0);//
-	////cv::rectangle(result, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), 2, 8, 0);
-	///*cv::imshow("Test_image", res);
-	//cv::waitKey();*/
-	///*cv::Rect roi(matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows));
-	//cv::Mat subimage = test_img(roi);
-	//float btresult = bowTest(subimage);
-	//std::cout << "\n" << "+++Bow result: " << btresult << "+++" << "\n";
-	//return 0;*/
-
-	////Second hand
-	//for (int i = 0; i < 4; i++)
-	//{
-	//	cv::Mat result2;
-	//	cv::Mat testImage = test_img.clone();//
-	//	result2.create(result_rows, result_cols, CV_32FC1);
-	//	//cv::rotate(hand_img, hand_img, cv::ROTATE_90_COUNTERCLOCKWISE);
-	//	cv::matchTemplate(testImage, hand_img, result2, cv::TemplateMatchModes::TM_CCOEFF_NORMED);
-	//	cv::minMaxLoc(result2, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
-	//	matchLoc = maxLoc;
-	//	cv::Rect roi(matchLoc,cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows));
-	//	cv::Mat subimage = testImage(roi);
-	//	float btresult = bowTest(subimage);
-	//	std::cout << "\n" << "+++Bow result: " << btresult << "+++" << "\n";
-	//	cv::imshow("subimage",subimage);//
-	//	cv::waitKey();
-	//	break;
-	//	cv::rectangle(testImage, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), -1, 8, 0);
-	//	btresult = bowTest(testImage);
-	//	std::cout << "\n" << "+++Bow result: " << btresult << "+++" << "\n";
-	//	break;
-	//	if ( btresult - 1 < 0.01 )
-	//	{
-	//		//std::cout <<"\n" << "+++Bow result: " << btresult << "+++" << "\n";
-	//		cv::rectangle(test_img, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255),1, 8, 0);//
-	//	}
-	//	//cv::rectangle(result, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), 2, 8, 0);
-	//	 
-	//}
-	//return 0;
-	//cv::imshow("second hand", test_img);//
-	//cv::waitKey();
-	
-	
-
-	
-	
-
-	//cv::Mat img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\_LABELLED_SAMPLES\\CARDS_COURTYARD_B_T\\frame_0580.jpg");
-
+std::vector<cv::Rect> cascade(cv::Mat img)
+{
 	//load trained model
-	//cv::CascadeClassifier my_cascade("cascade2k48.xml");
+	cv::CascadeClassifier my_cascade("best_cascade.xml");
 
-
-	//std::vector<cv::Rect> hands;
-	//cv::Mat output = test_img; 
-	//my_cascade.detectMultiScale(test_img, hands, 2, 2, 0, cv::Size(120, 120), cv::Size(280, 280));
-
+	std::vector<cv::Rect> hands;
+	cv::Mat output = img; 
+	my_cascade.detectMultiScale(img, hands, 1.2, 2, 0, cv::Size(100, 100), cv::Size(500, 500));
 	//for (int i = 0; i < hands.size(); i++)
 	//{
 	//	cv::rectangle(output, hands[i], cv::Scalar(0, 255, 0));
-	//	//hands.push_back(Rect(img.cols - r->x - r->width, r->y, r->width, r->height));
+	//////	//hands.push_back(Rect(img.cols - r->x - r->width, r->y, r->width, r->height));
 	//}
-
-	//cv::imshow("Matches", output);
+	//cv::imshow("All bb", output);
 	//cv::waitKey(0);
+	return hands;
 }
 
-void blobDetector(std::string path)
-{
-	std::vector<cv::Mat> imgVec;
-	int fNSize = 0;
-	// load images
-	std::cout << "\n" << "Loading images" << "\n";
-	cv::Mat img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\Hands\\Hand_0006335.jpg");
-	imgVec.push_back(img); // "model"
 
-	img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\_LABELLED_SAMPLES\\CARDS_COURTYARD_B_T\\frame_0011.jpg");
-	imgVec.push_back(img);
 
-	cv::Mat modelDescriptor = siftDescriptor(imgVec[0]);
-	cv::SimpleBlobDetector::Params params;
-	//Change thresholds
-	params.minThreshold = 10;
-	params.maxThreshold = 200;
 
-	// Filter by Area.
-	params.filterByArea = true;
-	params.minArea = 1500;
-
-	// Filter by Circularity
-	params.filterByCircularity = true;
-	params.minCircularity = 0.1;
-
-	// Filter by Convexity
-	params.filterByConvexity = true;
-	params.minConvexity = 0.87;
-
-	// Filter by Inertia
-	params.filterByInertia = true;
-	params.minInertiaRatio = 0.01;
-
-	cv::Ptr<cv::SimpleBlobDetector> sbd = cv::SimpleBlobDetector::create();
-	cv::Mat idescriptor, mdescriptor;
-	std::vector<cv::KeyPoint> iKeyPoints, mKeyPoints;
-	sbd->detect(imgVec[1], iKeyPoints);
-	sbd->compute(imgVec[1], iKeyPoints, idescriptor);
-
-	sbd->detect(imgVec[0], mKeyPoints);
-	sbd->compute(imgVec[0], mKeyPoints, mdescriptor);
-
-	cv::BFMatcher matcher;
-	std::vector<cv::DMatch> matches;
-	matcher.match(idescriptor, mdescriptor, matches);
-
-	double max_dist = 0; double min_dist = 100;
-
-	//-- Quick calculation of max and min distances between keypoints
-	for (int i = 0; i < idescriptor.rows; i++)
-	{
-		double dist = matches[i].distance;
-		if (dist < min_dist) min_dist = dist;
-		if (dist > max_dist) max_dist = dist;
-	}
-
-	printf("-- Max dist : %f \n", max_dist);
-	printf("-- Min dist : %f \n", min_dist);
-
-	//-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
-	std::vector< cv::DMatch > good_matches;
-
-	for (int i = 0; i < idescriptor.rows; i++)
-	{
-		if (matches[i].distance < 3 * min_dist)
-		{
-			good_matches.push_back(matches[i]);
-		}
-	}
-
-	cv::Mat img_matches;
-	cv::drawMatches(imgVec[1], iKeyPoints, imgVec[0], mKeyPoints,
-		good_matches, img_matches, cv::Scalar::all(-1), cv::Scalar::all(-1),
-		std::vector<char>(), cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
-
-	cv::imshow("Good matches", img_matches);
-	cv::waitKey(0);
-
-}
-
-cv::Mat blobDescriptor(cv::Mat img)
-{
-	cv::SimpleBlobDetector::Params params;
-	params.filterByColor = true;
-
-	params.minArea = 80;
-
-	params.filterByConvexity = true;
-	params.minConvexity = 0.5;
-
-	cv::Ptr<cv::SimpleBlobDetector> sbd = cv::SimpleBlobDetector::create(params);
-	cv::Mat descriptor;
-	std::vector<cv::KeyPoint> keyPoints;
-	sbd->detect(img, keyPoints);
-	sbd->compute(img, keyPoints, descriptor);
-	cv::Mat output;
-	
-	return descriptor;
-}
 
 cv::Mat siftDescriptor(cv::Mat img)
 {
@@ -479,5 +491,67 @@ cv::Mat computeTestHistogram(cv::Mat descriptor)
 		histogram.at<float>(0, matches.at(index).trainIdx) += 1.0;
 	}
 	return histogram;
+}
+
+void trash()
+{
+	/*cv::Mat edges;
+	cv::Canny(img, edges, 10, 40);
+
+	std::vector<std::vector<cv::Point>> contours;
+	std::vector<cv::Vec4i> hierarchy;
+	cv::findContours(edges, contours, hierarchy, cv::RetrievalModes::RETR_LIST, cv::ContourApproximationModes::CHAIN_APPROX_NONE);
+	int contoursIdx = 0;
+	double maxArea = 0.0;
+	for (int i = 0; i < contours.size(); i++)
+	{
+		double tmp = cv::contourArea(contours);
+		if (tmp > maxArea)
+		{
+			contoursIdx = i;
+			maxArea = tmp;
+		}
+	}
+	cv::Mat mask = cv::Mat::zeros(edges.rows, edges.cols, CV_8UC3 );
+	cv::fillConvexPoly(mask, contours[contoursIdx], (255, 255, 255));
+	cv::imshow("edges", mask);
+	cv::waitKey(0);
+	return 0;*/
+
+	/*int result_cols = test_img.cols - hand_img.cols + 1;
+	int result_rows = test_img.rows - hand_img.rows + 1;
+	cv::Mat result;
+	result.create(result_rows, result_cols, CV_32FC1);*/
+	//float rslt = bowTest(test_img);
+	//std::cout <<"\n" << "result: " << rslt << "\n";
+	//return 0;
+
+	//Preprocessing 
+	//cv::Mat tmp, res;
+
+	//cv::blur(img, tmp, cv::Size(5, 5));
+
+	//cv::cvtColor(tmp, tmp, cv::COLOR_BGR2HSV);
+	///*cv::imshow("prepro", tmp);
+	//cv::waitKey(0);*/
+	//
+	//cv::inRange(img, cv::Scalar(0, 50, 0), cv::Scalar(85, 255, 209),  tmp);
+
+	//cv::erode(tmp, tmp, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5)));
+
+	//cv::dilate(tmp, tmp, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5)));	
+
+	////
+	//cv::bitwise_and(img, img,res, tmp);
+	//
+	//img = res;
+	/*cv::imshow("original", img);
+	cv::waitKey(0); */
+
+	/*cv::imshow("prepro", tmp);
+	cv::waitKey(0);*/
+	/*cv::imshow("res", res);
+	cv::waitKey(0);*/
+	// End preprocessing
 }
 

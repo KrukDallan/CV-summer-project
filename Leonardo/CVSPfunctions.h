@@ -14,7 +14,7 @@
 #include <string>
 
 float bowTest(cv::Mat image);
-void kNearest();
+void kNearest(std::string path);
 cv::Mat computeTestHistogram(cv::Mat descriptor);
 void bow(std::string path);
 

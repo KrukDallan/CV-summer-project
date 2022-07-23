@@ -17,94 +17,95 @@
 int main(int argc, char** argv)
 {
 	std::string path = argv[1];
-	bow(path);
+	//kNearest(path);
+	//bow(path);
 	//blobDetector(path);
 	cv::Mat hand_img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\Hands\\Hand_0006335.jpg");
-	resize(hand_img, hand_img, cv::Size(), 0.2, 0.2, cv::INTER_LINEAR);
+	resize(hand_img, hand_img, cv::Size(), 1, 1, cv::INTER_LINEAR);
 	//cv::rotate(hand_img, hand_img, cv::ROTATE_90_CLOCKWISE);
 	cv::Mat test_img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\_LABELLED_SAMPLES\\CARDS_COURTYARD_B_T\\frame_0316.jpg");
-	int result_cols = test_img.cols - hand_img.cols + 1;
+	/*int result_cols = test_img.cols - hand_img.cols + 1;
 	int result_rows = test_img.rows - hand_img.rows + 1;
 	cv::Mat result;
-	result.create(result_rows, result_cols, CV_32FC1);
-	/*float rslt = bowTest(hand_img);
+	result.create(result_rows, result_cols, CV_32FC1);*/
+	float rslt = bowTest(test_img);
 	std::cout <<"\n" << "result: " << rslt << "\n";
-	return 0;*/
-	cv::Mat tmp, res;
-
-	cv::blur(test_img, tmp, cv::Size(5, 5));
-
-	cv::cvtColor(tmp, tmp, cv::COLOR_BGR2HSV);
-
-	cv::inRange(tmp, cv::Scalar(0, 110, 0), cv::Scalar(55, 255, 169),  tmp);
-
-	//cv::erode(tmp, tmp, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)));
-
-	//cv::dilate(tmp, tmp, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5)));	
-
-	
-	cv::bitwise_and(test_img, test_img,res, tmp);
-	
-	/*cv::imshow("original", test_img);
-	cv::waitKey(0); 
-	cv::imshow("prepro", tmp);
-	cv::waitKey(0);
-	cv::imshow("res", res);
-	cv::waitKey(0);*/
-	/*cv::cvtColor(hand_img, hand_img, cv::COLOR_BGR2GRAY);
-	std::vector<std::vector<cv::Point>> contours;
-	cv::findContours(hand_img, contours, cv::RetrievalModes::RETR_LIST, cv::ContourApproximationModes::CHAIN_APPROX_TC89_KCOS);
-	cv::drawContours(hand_img, contours, -1, (0, 255, 0), 3);
-	cv::imshow("contours", hand_img);
-	cv::waitKey(0);*/
-	
-	cv::matchTemplate(test_img, hand_img, result, cv::TemplateMatchModes::TM_CCORR_NORMED); //
-	double minVal; double maxVal; cv::Point minLoc; cv::Point maxLoc;
-	cv::Point matchLoc;
-	cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
-	matchLoc = maxLoc;
-	cv::rectangle(test_img, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), -1, 8, 0);//
-	//cv::rectangle(result, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), 2, 8, 0);
-	/*cv::imshow("Test_image", res);
-	cv::waitKey();*/
-	/*cv::Rect roi(matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows));
-	cv::Mat subimage = test_img(roi);
-	float btresult = bowTest(subimage);
-	std::cout << "\n" << "+++Bow result: " << btresult << "+++" << "\n";
-	return 0;*/
-
-	//Second hand
-	for (int i = 0; i < 4; i++)
-	{
-		cv::Mat result2;
-		cv::Mat testImage = test_img.clone();//
-		result2.create(result_rows, result_cols, CV_32FC1);
-		//cv::rotate(hand_img, hand_img, cv::ROTATE_90_COUNTERCLOCKWISE);
-		cv::matchTemplate(testImage, hand_img, result2, cv::TemplateMatchModes::TM_CCOEFF_NORMED);
-		cv::minMaxLoc(result2, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
-		matchLoc = maxLoc;
-		cv::Rect roi(matchLoc,cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows));
-		cv::Mat subimage = testImage(roi);
-		float btresult = bowTest(subimage);
-		std::cout << "\n" << "+++Bow result: " << btresult << "+++" << "\n";
-		cv::imshow("subimage",subimage);//
-		cv::waitKey();
-		break;
-		cv::rectangle(testImage, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), -1, 8, 0);
-		btresult = bowTest(testImage);
-		std::cout << "\n" << "+++Bow result: " << btresult << "+++" << "\n";
-		break;
-		if ( btresult - 1 < 0.01 )
-		{
-			//std::cout <<"\n" << "+++Bow result: " << btresult << "+++" << "\n";
-			cv::rectangle(test_img, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255),1, 8, 0);//
-		}
-		//cv::rectangle(result, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), 2, 8, 0);
-		 
-	}
 	return 0;
-	cv::imshow("second hand", test_img);//
-	cv::waitKey();
+	//cv::Mat tmp, res;
+
+	//cv::blur(test_img, tmp, cv::Size(5, 5));
+
+	//cv::cvtColor(tmp, tmp, cv::COLOR_BGR2HSV);
+
+	//cv::inRange(tmp, cv::Scalar(0, 110, 0), cv::Scalar(55, 255, 169),  tmp);
+
+	////cv::erode(tmp, tmp, cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5)));
+
+	////cv::dilate(tmp, tmp, cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5)));	
+
+	//
+	//cv::bitwise_and(test_img, test_img,res, tmp);
+	//
+	///*cv::imshow("original", test_img);
+	//cv::waitKey(0); 
+	//cv::imshow("prepro", tmp);
+	//cv::waitKey(0);
+	//cv::imshow("res", res);
+	//cv::waitKey(0);*/
+	///*cv::cvtColor(hand_img, hand_img, cv::COLOR_BGR2GRAY);
+	//std::vector<std::vector<cv::Point>> contours;
+	//cv::findContours(hand_img, contours, cv::RetrievalModes::RETR_LIST, cv::ContourApproximationModes::CHAIN_APPROX_TC89_KCOS);
+	//cv::drawContours(hand_img, contours, -1, (0, 255, 0), 3);
+	//cv::imshow("contours", hand_img);
+	//cv::waitKey(0);*/
+	//
+	//cv::matchTemplate(test_img, hand_img, result, cv::TemplateMatchModes::TM_CCORR_NORMED); //
+	//double minVal; double maxVal; cv::Point minLoc; cv::Point maxLoc;
+	//cv::Point matchLoc;
+	//cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
+	//matchLoc = maxLoc;
+	//cv::rectangle(test_img, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), -1, 8, 0);//
+	////cv::rectangle(result, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), 2, 8, 0);
+	///*cv::imshow("Test_image", res);
+	//cv::waitKey();*/
+	///*cv::Rect roi(matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows));
+	//cv::Mat subimage = test_img(roi);
+	//float btresult = bowTest(subimage);
+	//std::cout << "\n" << "+++Bow result: " << btresult << "+++" << "\n";
+	//return 0;*/
+
+	////Second hand
+	//for (int i = 0; i < 4; i++)
+	//{
+	//	cv::Mat result2;
+	//	cv::Mat testImage = test_img.clone();//
+	//	result2.create(result_rows, result_cols, CV_32FC1);
+	//	//cv::rotate(hand_img, hand_img, cv::ROTATE_90_COUNTERCLOCKWISE);
+	//	cv::matchTemplate(testImage, hand_img, result2, cv::TemplateMatchModes::TM_CCOEFF_NORMED);
+	//	cv::minMaxLoc(result2, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
+	//	matchLoc = maxLoc;
+	//	cv::Rect roi(matchLoc,cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows));
+	//	cv::Mat subimage = testImage(roi);
+	//	float btresult = bowTest(subimage);
+	//	std::cout << "\n" << "+++Bow result: " << btresult << "+++" << "\n";
+	//	cv::imshow("subimage",subimage);//
+	//	cv::waitKey();
+	//	break;
+	//	cv::rectangle(testImage, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), -1, 8, 0);
+	//	btresult = bowTest(testImage);
+	//	std::cout << "\n" << "+++Bow result: " << btresult << "+++" << "\n";
+	//	break;
+	//	if ( btresult - 1 < 0.01 )
+	//	{
+	//		//std::cout <<"\n" << "+++Bow result: " << btresult << "+++" << "\n";
+	//		cv::rectangle(test_img, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255),1, 8, 0);//
+	//	}
+	//	//cv::rectangle(result, matchLoc, cv::Point(matchLoc.x + hand_img.cols, matchLoc.y + hand_img.rows), cv::Scalar::all(255), 2, 8, 0);
+	//	 
+	//}
+	//return 0;
+	//cv::imshow("second hand", test_img);//
+	//cv::waitKey();
 	
 	
 
@@ -326,112 +327,112 @@ void bow(std::string path)
 		fs << "vocabulary" << bow;
 		fs.release();
 	}
-	executionCode = 2;
-	if (executionCode == 2)
-	{
-		cv::Mat bow;
-		cv::FileStorage fs("bag-of-words.yml", cv::FileStorage::READ);
-		fs["vocabulary"] >> bow;
-		fs.release();
-
-		std::cout << "\n" << "Creating histograms" << "\n";
-
-		//Preprocessing for the SVM
-		//Create the histograms
-		cv::Mat trainingInput;
-		cv::Mat trainingLabels;
-
-		std::vector<cv::Mat> greyScale;
-		int fNSize = 0;
-		
-		std::vector<std::string> datasetType{ "hands",  "chess", "jenga", "wb"};//"cards"
-		std::cout << "\n" << "Loading images" << "\n";
-		for (int i = 0; i < datasetType.size(); i++)
-		{
-			std::string fullPath = path + "\\" + datasetType[i] + "Dataset" + "/*.jpg";
-			cv::String folderString(fullPath);
-			std::vector<cv::String> fileNames;
-			cv::glob(folderString, fileNames, false);
-			fNSize += fileNames.size();
-			for (int i = 0; i < fileNames.size(); i++)
-			{
-				cv::Mat img = cv::imread(fileNames[i], cv::IMREAD_GRAYSCALE);
-				greyScale.push_back(img);
-			}
-			std::cout << "\n" << "Loaded dataset " << datasetType[i] + "Dataset" << "\n";
-		}
-		int label = 1;
-		for (int i = 0; i < datasetType.size(); i++)
-		{
-			std::cout << "\n" << "Current dataset: " << datasetType[i] << "Dataset" << "\n";
-
-			std::string fullPath = path + "\\" + datasetType[i] + "Dataset" + "/*.jpg";
-			cv::String folderString(fullPath);
-			std::vector<cv::String> fileNames;
-			cv::glob(folderString, fileNames, false);
-			int increment5 = 0.05 * fileNames.size();
-			int countdown = increment5;
-			int percent5 = 0;
-
-			for (int j = 0; j < fileNames.size(); j++)
-			{
-				cv::Mat img = cv::imread(fileNames[j], cv::IMREAD_GRAYSCALE);
-				cv::Ptr<cv::SiftDescriptorExtractor> extractor = cv::SiftDescriptorExtractor::create();
-				std::vector<cv::KeyPoint> keyPoints;
-				cv::Mat descriptor;
-				//detects features
-				extractor->detect(greyScale[i], keyPoints);
-				//Computes the descriptors for a set of keypoints detected in an image
-				extractor->compute(greyScale[i], keyPoints, descriptor);
-
-				cv::Ptr<cv::DescriptorMatcher> matcher = cv::FlannBasedMatcher::create();
-				std::vector<cv::DMatch> matches;
-				matcher->match(descriptor, bow, matches);
-				cv::Mat histogram = cv::Mat::zeros(1, bow.rows, CV_32F);
-				int index = 0;
-				for (std::vector<cv::DMatch>::iterator k = matches.begin(); k < matches.end(); k++, index++)
-				{
-					histogram.at<float>(0, matches.at(index).trainIdx) += 1.0;
-				}
-				trainingInput.push_back(histogram);
-				trainingLabels.push_back(cv::Mat(1, 1, CV_32SC1, label)); //CV_32SC1 is a 1 Channel of signed 32 bit integer
-
-				if (--countdown == 0)
-				{
-					percent5++;
-					std::cout << "\r" << std::string(percent5, '|') << percent5 * 5 << "%";
-					countdown = increment5;
-					std::cout.flush();
-				}
-			}
-			label +=1;
-		}
-		/*cv::FileStorage fs1("labels.yml", cv::FileStorage::WRITE);
-		fs1 << "klabels" << trainingLabels;
-		fs1.release();*/
-		//Create and train kNearest
-		std::cout << "\n" << "Creating and training kNearest" << "\n";
-		cv::Ptr<cv::ml::KNearest> knn = cv::ml::KNearest::create();
-		knn->setDefaultK(4);
-		
-
-		//cv::Ptr<cv::ml::SVM> svm = cv::ml::SVM::create();
-		/*svm->setKernel(cv::ml::SVM::LINEAR);
-		svm->setTermCriteria(cv::TermCriteria(cv::TermCriteria::MAX_ITER, 1e3, 1e-6));*/
-		cv::Ptr<cv::ml::TrainData> trainData = cv::ml::TrainData::create(trainingInput, cv::ml::ROW_SAMPLE, trainingLabels);
-		//svm->train(trainData);
-		knn->train(trainData);
-		std::cout << "\n" << "kNearest trained" << "\n";
-		std::cout << "\n" << "Saving kNearest" << "\n";
-		knn->save("220722-kNN.xml");
-		std::cout << "\n" << "kNearest saved" << "\n";
-	}
-
+	
 	//Test section of the BoW algo
 	if (executionCode == 3)
 	{
 		//bowTest();
 	}
+}
+
+void kNearest(std::string path)
+{
+	cv::Mat bow;
+	cv::FileStorage fs("bag-of-words.yml", cv::FileStorage::READ);
+	fs["vocabulary"] >> bow;
+	fs.release();
+
+	std::cout << "\n" << "Creating histograms" << "\n";
+
+	//Preprocessing for the kNN
+	//Create the histograms
+	cv::Mat trainingInput;
+	cv::Mat trainingLabels;
+
+	std::vector<cv::Mat> greyScale;
+	int fNSize = 0;
+
+	std::vector<std::string> datasetType{ "bighands",  "bigchess", "bigjenga", "wb" };//"cards"
+	std::cout << "\n" << "Loading images" << "\n";
+	for (int i = 0; i < datasetType.size(); i++)
+	{
+		std::string fullPath = path + "\\" + datasetType[i] + "Dataset" + "/*.jpg";
+		cv::String folderString(fullPath);
+		std::vector<cv::String> fileNames;
+		cv::glob(folderString, fileNames, false);
+		fNSize += fileNames.size();
+		for (int i = 0; i < fileNames.size(); i++)
+		{
+			cv::Mat img = cv::imread(fileNames[i], cv::IMREAD_GRAYSCALE);
+			greyScale.push_back(img);
+		}
+		std::cout << "\n" << "Loaded dataset " << datasetType[i] + "Dataset" << "\n";
+	}
+	int label = 1;
+	for (int i = 0; i < datasetType.size(); i++)
+	{
+		std::cout << "\n" << "Current dataset: " << datasetType[i] << "Dataset" << "\n";
+
+		std::string fullPath = path + "\\" + datasetType[i] + "Dataset" + "/*.jpg";
+		cv::String folderString(fullPath);
+		std::vector<cv::String> fileNames;
+		cv::glob(folderString, fileNames, false);
+		int increment5 = 0.05 * fileNames.size();
+		int countdown = increment5;
+		int percent5 = 0;
+
+		for (int j = 0; j < fileNames.size(); j++)
+		{
+			cv::Mat img = cv::imread(fileNames[j], cv::IMREAD_GRAYSCALE);
+			cv::Ptr<cv::SiftDescriptorExtractor> extractor = cv::SiftDescriptorExtractor::create();
+			std::vector<cv::KeyPoint> keyPoints;
+			cv::Mat descriptor;
+			//detects features
+			extractor->detect(greyScale[i], keyPoints);
+			//Computes the descriptors for a set of keypoints detected in an image
+			extractor->compute(greyScale[i], keyPoints, descriptor);
+
+			cv::Ptr<cv::DescriptorMatcher> matcher = cv::FlannBasedMatcher::create();
+			std::vector<cv::DMatch> matches;
+			matcher->match(descriptor, bow, matches);
+			cv::Mat histogram = cv::Mat::zeros(1, bow.rows, CV_32F);
+			int index = 0;
+			for (std::vector<cv::DMatch>::iterator k = matches.begin(); k < matches.end(); k++, index++)
+			{
+				histogram.at<float>(0, matches.at(index).trainIdx) += 1.0;
+			}
+			trainingInput.push_back(histogram);
+			trainingLabels.push_back(cv::Mat(1, 1, CV_32SC1, label)); //CV_32SC1 is a 1 Channel of signed 32 bit integer
+
+			if (--countdown == 0)
+			{
+				percent5++;
+				std::cout << "\r" << std::string(percent5, '|') << percent5 * 5 << "%";
+				countdown = increment5;
+				std::cout.flush();
+			}
+		}
+		label += 1;
+	}
+	/*cv::FileStorage fs1("labels.yml", cv::FileStorage::WRITE);
+	fs1 << "klabels" << trainingLabels;
+	fs1.release();*/
+	//Create and train kNearest
+	std::cout << "\n" << "Creating and training kNearest" << "\n";
+	cv::Ptr<cv::ml::KNearest> knn = cv::ml::KNearest::create();
+	knn->setDefaultK(4);
+
+
+	//cv::Ptr<cv::ml::SVM> svm = cv::ml::SVM::create();
+	/*svm->setKernel(cv::ml::SVM::LINEAR);
+	svm->setTermCriteria(cv::TermCriteria(cv::TermCriteria::MAX_ITER, 1e3, 1e-6));*/
+	cv::Ptr<cv::ml::TrainData> trainData = cv::ml::TrainData::create(trainingInput, cv::ml::ROW_SAMPLE, trainingLabels);
+	//svm->train(trainData);
+	knn->train(trainData);
+	std::cout << "\n" << "kNearest trained" << "\n";
+	std::cout << "\n" << "Saving kNearest" << "\n";
+	knn->save("220722-kNN.xml");
+	std::cout << "\n" << "kNearest saved" << "\n";
 }
 
 float bowTest(cv::Mat image)

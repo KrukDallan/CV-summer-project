@@ -17,7 +17,6 @@ void read_input(instance* inst, int argc, char** argv) {
 	for (int i = 0; i < argc; i++) {
 		if (strcmp(argv[i], "-f") == 0) {
 			const char* path = argv[++i];
-			cout << path << '\n';
 			inst->image_path = (char*)calloc(strlen(path), sizeof(char));
 			strncpy(inst->image_path, path, strlen(path));
 			continue;
@@ -45,7 +44,6 @@ void read_input(instance* inst, int argc, char** argv) {
 
 void upload_img(instance* inst) {
 	string path = inst->image_path;
-	cout << inst->image_path;
 	//path += "/";
 	//path += inst->set;
 	path += "/*.jpg";
@@ -85,7 +83,7 @@ void first_BoF_step(instance* inst)
 	Mat featureUnclustered;
 	img = inst->grey_image;
 
-	for (int i = 0; i < img.size()/2; i=i+2) {
+	for (int i = 0; i < img.size() / 2; i = i + 2) {
 		Ptr<SiftFeatureDetector> detector = SiftFeatureDetector::create();
 		vector<KeyPoint> keypoints;
 		detector->detect(img[i], keypoints);
@@ -96,7 +94,7 @@ void first_BoF_step(instance* inst)
 		featureUnclustered.push_back(descriptors);
 		Scalar keypointColor = Scalar(255, 0, 0);
 		drawKeypoints(img[i], keypoints, output[i], keypointColor, DrawMatchesFlags::DEFAULT);
-	}	
+	}
 
 	int dictionarySize = 200;
 
@@ -116,13 +114,13 @@ void first_BoF_step(instance* inst)
 	fs << "vocabulary" << dictionary;
 	fs.release();
 
-	inst->output_SIFT = output;	
+	inst->output_SIFT = output;
 }
 
 void second_BoF_step(instance* inst) {
 	Mat dictionary;
 	Mat bowDescriptor;
-	
+
 	FileStorage fs("dictionary.yml", FileStorage::READ);
 	fs["vocabulary"] >> dictionary;
 	fs.release();
@@ -137,7 +135,7 @@ void second_BoF_step(instance* inst) {
 
 	bowDE.setVocabulary(dictionary);
 
-	char* filename =new char[100];
+	char* filename = new char[100];
 
 	char* imageTag = new char[10];
 
@@ -160,24 +158,20 @@ void second_BoF_step(instance* inst) {
 	fs1.release();
 }
 
-void preprocessing(instance* inst) {
-	vector<Mat> img = inst->image;
+Mat preprocessing(Mat input) {
 	Mat tmp;
-	for (int i = 0; i < img.size(); i++) {
-		
-		blur(img[i], tmp, Size(5, 5));
-		
-		cvtColor(tmp, tmp, COLOR_BGR2HSV);
+	blur(input, tmp, Size(5, 5));
 
-		inRange(tmp, Scalar(0, 30, 60), Scalar(20, 150, 255), tmp);
+	cvtColor(tmp, tmp, COLOR_BGR2HSV);
 
-		erode(tmp, tmp, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
+	inRange(tmp, Scalar(0, 30, 60), Scalar(20, 150, 255), tmp);
 
-		dilate(tmp, tmp, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
+	erode(tmp, tmp, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
 
-		inst->filtered.push_back(tmp);
-	}
-	
+	dilate(tmp, tmp, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
+
+	return tmp;
+
 }
 
 
@@ -197,11 +191,11 @@ void binarization(instance* inst) {
 					34 < img[i].at<Vec3b>(j, k)[1] && img[i].at<Vec3b>(j, k)[1] < 210 &&
 					30  < img[i].at<Vec3b>(j, k)[2] && img[i].at<Vec3b>(j, k)[2] < 190
 					) {
-					
+
 					img[i].at<Vec3b>(j, k)[0] = 255;
 					img[i].at<Vec3b>(j, k)[1] = 255;
 					img[i].at<Vec3b>(j, k)[2] = 255;
-					
+
 
 
 				}

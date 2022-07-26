@@ -2,13 +2,19 @@
 
 #include "CVSPfunctions.h"
 
+
+// HISTOGRAM TO DISCARD NON-HAND OBJECTS?
+
 int main(int argc, char** argv)
 {
 	std::string path = argv[1];
-	
+	cv::Rect r;
+
 	// Image of the hand to be used for Template Matching
-	cv::Mat hand_img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\Hands\\Hand_0006335.jpg");
+	cv::Mat hand_img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\test_hand.png");
+	//cv::Mat hand_img = meanshift(hhand_img, r);
 	//resize(hand_img, hand_img, cv::Size(), 0.5, 0.5, cv::INTER_LINEAR);
+	//cv::cvtColor(hand_img, hand_img, cv::COLOR_BGR2GRAY);
 	std::vector<cv::Mat> handVector;
 	handVector.push_back(hand_img);
 	//Obtain rotated versions of the hand
@@ -19,65 +25,136 @@ int main(int argc, char** argv)
 	}
 	
 	// Image to be tested
-	cv::Mat img = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\02.jpg");
-
-	// Vector to store every rect (bb) found by the cascade of classifiers
+	cv::Mat iimg = cv::imread("D:\\Desktop2\\MAGISTRALE\\Primo_anno-secondo_semestre\\ComputerVision\\0FinalProject\\02.jpg");
+	std::string fn = "01.jpg";
+	//cv::Mat img = meanshift(iimg);
+	cv::Mat mask = removeBG(iimg);
+	cv::Mat img;
+	iimg.copyTo(img, mask);
+	//cv::inRange(img, cv::Scalar(0, 0, 0), cv::Scalar(255, 255, 255), tmp);
+	cv::imshow("Mask result", img);
+	cv::waitKey(0);
+	
+	//cv::GaussianBlur(img, img, cv::Size(5, 5),0,0);
+	//histogram(img);
+	//return 0;
+	
+	// Vector to store every rect (bb) found by the cascade of classifiers 
 	// Note: intersecting rects will be dealt with in the following lines
-	std::vector<cv::Rect> temp_hands = cascade(img);
+	//std::vector<cv::Rect> hands = cascade(img); //temp_hands
+	//cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
+	std::vector<cv::Rect> hands = cascade(img); //temp_hands
 
+	/*for (int i = 0; i < hands.size(); i++)
+	{
+		cv::rectangle(img, hands[i], cv::Scalar(0, 255, 0));
+	}
+	cv::imshow("All bb", img);
+	cv::waitKey(0);
+	return 0; */
+
+	//cv::Mat kernel = (cv::Mat_<float>(3, 3) <<
+	//	1, 1, 1,
+	//	1, -6, 1,
+	//	1, 1, 1); //-6 -> very bright
+	//cv::Mat imgLaplacian;
+	//cv::filter2D(img, imgLaplacian, CV_32F, kernel);
+	//cv::Mat sharp;
+	//img.convertTo(sharp, CV_32F);
+	//cv::Mat imgResult = sharp - imgLaplacian;
+	//// convert back to 8bits gray scale
+	//imgResult.convertTo(imgResult, CV_8UC3); //why CV_8UC3?
+	//imgLaplacian.convertTo(imgLaplacian, CV_8UC3);
+	/*cv::imshow("Laplace Filtered Image", imgLaplacian);
+	cv::waitKey(0);
+	cv::imshow("New Sharped Image", imgResult);
+	cv::waitKey(0);
+	return 0;
+	cv::imshow("All bb", img);
+	cv::waitKey(0);
+	return 0;*/
+	//img = imgLaplacian;
+	
+	/*std::vector<int> areas;
+	for (int i = 0; i < temp_hands.size(); i++)
+	{
+		areas.push_back(temp_hands[i].area());
+	}*/
+
+	//std::sort(areas.begin(), areas.end(), std::greater<int>());
+	//for (int i = 0; i < temp_hands.size(); i++)
+	//{
+	//	/*std::vector<float>::iterator iter = std::find(areas.begin(), areas.end(), temp_hands[i]);
+	//	int feindex = std::distance(areas.begin(), iter);*/
+	//	for (int j = i; j < areas.size(); j++)
+	//	{
+	//		int tmp = temp_hands[j].area();
+	//		if (tmp == areas[i] && i != j)
+	//		{
+	//			std::iter_swap(temp_hands.begin() + i, temp_hands.begin() + j);
+	//			continue;
+	//		}
+	//	}
+	//}
+	// Now temp_hands is sorted by dimension of rect (bigger first)
+	
 	// Vector to store only the correct rects, which will be applied to the test image
 	std::vector<cv::Rect> rectVector;
 	 
 	// Vector that will contain no intersecting rectangles
-	std::vector<cv::Rect> hands;
+	//std::vector<cv::Rect> hands;
 
-	bool no_intersection = true;
+	//bool no_intersection = true;
 	// +++++ WORK IN PROGRESS +++++
-	for (int i = 0; i < temp_hands.size()-1; i++)
-	{
-		for (int j = i + 1; j < temp_hands.size(); j++)
-		{
-			cv::Rect intersection = temp_hands[i] & temp_hands[j];
-			double area = intersection.width * intersection.height;
-			double areaRecti = temp_hands[i].width * temp_hands[i].height;
-			double areaRectj = temp_hands[j].width * temp_hands[j].height;
-			double minAreaBetween = cv::min(areaRecti, areaRectj);
-			/*if (area > 40*minAreaBetween/100)
-			{
-				cv::Rect tmp = temp_hands[i] | temp_hands[j];
-				hands.push_back(tmp);
-				no_intersection = false;
-				break;
-			}*/
-			if (area > 0)
-			{
-				if (areaRecti > areaRectj)
-				{
-					temp_hands[j] = temp_hands[i];
-					hands.push_back(temp_hands[i]);
-				}
-				else
-				{
-					hands.push_back(temp_hands[j]);
-					break;
-				}
-			}
-			else if (area < 10 * minAreaBetween / 100)
-			{
-				/*cv::Point2f p1((temp_hands[i].x + temp_hands[j].x) * 0.5, (temp_hands[i].y + temp_hands[j].y) * 0.5);
-				cv::Point2f p2((std::max(temp_hands[i].x , temp_hands[j].x)-std::min(temp_hands[i].x, temp_hands[j].x)) * 0.25, (std::max(temp_hands[i].y ,temp_hands[j].y) - std::min(temp_hands[i].y, temp_hands[j].y)) * 0.5);
-				cv::Rect newRect(p1, p2);
-				hands.push_back(newRect);
-				temp_hands[j] = newRect;
-				break;*/
-			}
-		} 
-		if (no_intersection == true)
-		{
-			hands.push_back(temp_hands[i]);
-		}
-		no_intersection = true;
-	}
+	//for (int i = 0; i < temp_hands.size() - 1; i++)
+	//{
+	//	std::vector<bool> intersectionvector;
+	//	for (int j = i + 1; j < temp_hands.size(); j++)
+	//	{
+	//		cv::Rect intersection = temp_hands[i] & temp_hands[j];
+	//		
+	//		double area = intersection.width * intersection.height;
+	//		double areaRecti = temp_hands[i].width * temp_hands[i].height;
+	//		double areaRectj = temp_hands[j].width * temp_hands[j].height;
+	//		double minAreaBetween = cv::min(areaRecti, areaRectj);
+	//		if (area > 0)
+	//		{
+	//			no_intersection = false;
+	//			/*cv::Rect tmp = temp_hands[i] | temp_hands[j];
+	//			hands.push_back(tmp);
+	//			no_intersection = false;
+	//			break;*/
+	//			if (area >60 * minAreaBetween / 100)
+	//			{
+	//				cv::Rect tmp = temp_hands[i] | temp_hands[j];
+	//				hands.push_back(tmp);
+	//				no_intersection = false;
+	//				break;
+	//			}
+	//			else if ((area < 60 * minAreaBetween / 100) && (minAreaBetween< (cv::max(areaRecti, areaRectj))*0.5))
+	//			{
+	//				cv::Rect tmp = temp_hands[i] | temp_hands[j];
+	//				hands.push_back(tmp);
+	//				no_intersection = false;
+	//				break;
+	//			}
+	//			else if (area < 15*minAreaBetween/100)
+	//			{
+	//				//temp_hands[j] = temp_hands[i];
+	//				hands.push_back(temp_hands[i]);
+	//				hands.push_back(temp_hands[j]);
+	//				i++;
+	//				break;
+	//			}
+	//		}
+	//		
+	//	} 
+	//	if (no_intersection == true)
+	//	{
+	//		hands.push_back(temp_hands[i]);
+	//	}
+	//	no_intersection = true;
+	//}
 
 	// If you want to check how good the remaining bb are
 	/*for (int i = 0; i < hands.size(); i++)
@@ -103,7 +180,7 @@ int main(int argc, char** argv)
 			maxvalue = outputVector[1];
 		}
 	}
-	std::cout << "\n" << "Maxval = " << maxvalue << "\n";
+	//std::cout << "\n" << "Final Maxval = " << maxvalue << "\n";
 	// Check if the accuracy is too low
 	if (maxvalue < 0.1)
 	{
@@ -133,14 +210,14 @@ int main(int argc, char** argv)
 		maxvalue = 0.0;
 		for (int i = 0; i < handVector.size(); i++)
 		{
-			outputVector = correctBB(img, hand2, handVector[i]);
+			outputVector = correctBB(modimg, hand2, handVector[i]);
 			if (outputVector[1] > maxvalue)
 			{
 				bbIndex = (int)outputVector[0];
 				maxvalue = outputVector[1];
 			}
 		}
-		std::cout << "\n" << "Maxval = " << maxvalue << ", index = "<< bbIndex <<  "\n";
+		//std::cout << "\n" << "Final Maxval = " << maxvalue << ", index = "<< bbIndex <<  "\n";
 		
 		if (maxvalue<0.1)
 		{
@@ -174,10 +251,15 @@ int main(int argc, char** argv)
 			break;
 		}
 	}
+	cv::Mat floodedRect = floodfill(img, rectVector[1]);
+	floodedRect.copyTo(img(rectVector[1]));
+	cv::imshow("Flooded", img);
+	cv::waitKey(0);
 	for (int i = 0; i < rectVector.size(); i++)
 	{
 		cv::rectangle(img, rectVector[i], cv::Scalar(0, 255, 0));
 	}
+	//cv::imwrite(fn, img);
 	cv::imshow("Final result", img);
 	cv::waitKey(0);
 }
@@ -191,7 +273,7 @@ std::vector<float> correctBB(cv::Mat img, std::vector<cv::Rect> hands, cv::Mat h
 		output.push_back(0.0);
 		return output;
 	}
-	std::cout << "\n" << hands.size() << "\n"; 
+	//std::cout << "\n" << hands.size() << "\n"; 
 	cv::Mat result;
 	std::vector<float> output;
 	double maxMaxVal = 0.0;
@@ -210,8 +292,8 @@ std::vector<float> correctBB(cv::Mat img, std::vector<cv::Rect> hands, cv::Mat h
 			bbIndex = i +0.0;
 		}
 	}
-	std::cout << "\n" << "Maxval = " << maxMaxVal << "\n";
-	if (maxMaxVal < 0.38)
+	//std::cout << "\n" << "Maxval = " << maxMaxVal << "\n";
+	if (maxMaxVal < 0.40)
 	{
 		std::vector<float> output;
 		output.push_back(0.0);
@@ -230,7 +312,11 @@ std::vector<cv::Rect> cascade(cv::Mat img)
 
 	std::vector<cv::Rect> hands;
 	cv::Mat output = img; 
-	my_cascade.detectMultiScale(img, hands, 1.2, 2, 0, cv::Size(100, 100), cv::Size(500, 500));
+	my_cascade.detectMultiScale(img, hands, 1.2, 3, 0, cv::Size(100, 100), cv::Size(1500, 1500));//working pretty good
+	//my_cascade.detectMultiScale(img, hands, 1.2, 4, 0, cv::Size(100, 100), cv::Size(300, 300)); //tested
+	//my_cascade.detectMultiScale(img, hands, 1.2, 3, 0, cv::Size(100, 100), cv::Size(1500, 1500));//tested
+	//my_cascade.detectMultiScale(img, hands, 1.3, 4, 0, cv::Size(100, 100), cv::Size(1500, 1500));
+	
 	//for (int i = 0; i < hands.size(); i++)
 	//{
 	//	cv::rectangle(output, hands[i], cv::Scalar(0, 255, 0));
@@ -258,6 +344,12 @@ cv::Mat siftDescriptor(cv::Mat img)
 	return descriptor;
 }
 
+
+void histogram(cv::Mat img)
+{
+	cv::Mat histogram;
+	//cv::calcHist(img, 3, cv::noArray(), histogram);
+}
 
 void bow(std::string path)
 {

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SEGMENTATION_H
+#define SEGMENTATION_H
 // @name Leonardo Sforzin
 #include <opencv2/highgui.hpp>
 #include <opencv2/core.hpp>
@@ -21,3 +22,5 @@ cv::Mat meanshift(cv::Mat src);
 cv::Mat floodfill(cv::Mat src, cv::Rect rect, cv::Scalar colour);
 
 float accuracy(cv::Mat mask, std::string path);
+
+#endif

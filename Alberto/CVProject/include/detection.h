@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DETECTION_H
+#define DETECTION_H
 // @name Leonardo Sforzin
 
 #include <opencv2/highgui.hpp>
@@ -34,3 +35,5 @@ std::vector<float> IoUDetection(std::vector<cv::Rect> hands, std::string path);
 cv::Mat removeBG(cv::Mat src);
 
 cv::Mat sharpenImage(cv::Mat img);
+
+#endif

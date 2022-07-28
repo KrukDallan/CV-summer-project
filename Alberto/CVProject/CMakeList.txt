@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 2.8)
+project( CVProject )
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} ${CVProject/include} ${CVProject/src})
+add_executable( CVProject
+		    include/detection.h
+		    include/segmentation.h
+		    include/utilities.h 
+		    src/utilities.cpp
+		    src/detection.cpp
+		    src/segmentation.cpp 
+		    src/main.cpp)
+target_link_libraries(CVProject ${OpenCV_LIBS})

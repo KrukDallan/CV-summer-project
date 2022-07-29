@@ -5,3 +5,6 @@ that is the most part of code in this folder is unused or rejected from the fina
 or beacuse a faster and cleaner solutions were found instead.
 
 The main ideas that were rejected are: Bag of Features for the detection step and skin color mask for the segmentation part.
+
+Instead in the training folder are saved different files necessary for the training of the boosted cascade of weak classifiers, all files and
+their functions are well described in the report.

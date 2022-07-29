@@ -1,4 +1,4 @@
-#Makosa Alberto
+#Makosa-Alberto
 In this subfolder are present all the code part developed by Makosa Alberto during the drafting of the project. 
 Maily here will be found all attempts and test of different idea and strategies implemented to solve the project,
 that is the most part of code in this folder is unused or rejected from the final solutions due to the low accuracy/efficiency
